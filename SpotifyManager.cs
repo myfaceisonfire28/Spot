@@ -1,3 +1,4 @@
+using System.Net;
 using System;
 using System.Diagnostics;
 using System.Net.Http.Headers;
@@ -14,31 +15,38 @@ namespace spot
     public class SpotifyManager
     {
         static Random Rand = new Random();
-        static string? CurrentPlaying;
+        static string? CurrentSong;
         static string? CurrentArtist;
+        static string? PersonWhoAddedIt;
+        static string? CurrentTrackId = "";
 
-        //TODO make a lyrics, playrandomsong, and seek command. Also make it log the songs that get played and who added them.
+
+        //TODO make a lyrics (https://docs.genius.com/), playrandomsong, and seek command. Also make it log the songs that get played and who added them.
+        //TODO just fix the code also add a read me and shit so people can actually use the program
+        //TODO you know what you did for the C++ one with the rcon password and everything, do that again.
 
         static Root? QueueInfo = new Root();
-        public static string CommandName = "say";
+        public static string ChatCommand = "say";
 
         ///every command
-        static public List<string> FullListOfCommands = new List<string> {
+        static public List<string> Commands = new List<string> {
             "!add","!skip",
             "!back","!pause",
-            "!unpause","!shuffle",
+            "!play","!shuffle",
             "!current","!queue",
+            "!random", "!lyrics",
             "!rtd","!8ball",
-            "!play", "!robot"
+            "!robot","!flip"
         }; 
         ///Responses to commands
         string[] CommandResponses = {
             "Queue adding", "",
             "","Paused music.",
             "Unpaused music.","Shuffle",
-            "Currently playing: "+CurrentPlaying + " by " + CurrentArtist,"Say Queue in chat",
+            "Currently playing: "+CurrentSong + " by " + CurrentArtist,"Say Queue in chat",
+            "Not made","Not made", 
             "Rolled "+ Rand.Next(),EightBall[Rand.Next(EightBall.Length)], 
-            "wait your turn and use ! add", "Beep boop bop"
+            "Beep boop bop", Flip()
         };
 
         ///EightBall responses
@@ -57,110 +65,180 @@ namespace spot
             "IDK why are you asking me","Maybe",
             "Wait let me ask somebody !8ball"
         };
-        ///API commands
-        static public string[] ListOfApiCalls = {
-            "https://api.spotify.com/v1/me/player/queue?uri=","https://api.spotify.com/v1/me/player/next/",
-            "https://api.spotify.com/v1/me/player/previous/","https://api.spotify.com/v1/me/player/pause/",
-            "https://api.spotify.com/v1/me/player/play","https://api.spotify.com/v1/me/player/shuffle?state=",
-            "https://api.spotify.com/v1/me/player/pause/","https://api.spotify.com/v1/me/player/queue"
-        };
 
+        static HttpClient httpClient = new HttpClient();
+
+        static FormUrlEncodedContent formContent = new FormUrlEncodedContent(new[]{new KeyValuePair<string, string>("application/json"," ")});
+        public static string Flip()
+        {
+            if(Rand.Next(100) >= 50)
+            {
+                return "Tails.";
+            } 
+            else
+            {
+                return "Heads.";
+            }
+        }
         
 
-        
+        public static void Init()
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
+            GetCurrentSong().Wait();
+            Queue.Clear();
+        }
+
+
+
+
         ///Manges the commands that get sent
-        public async void Manage(string Command, string Song)
+        public static async Task<string> Manage(int CmdIndex, string PersonWhoCalled, string Params)
         {
-            try{TokenManager.RefreshTheToken().Wait();}
-            catch{}
+            // Checks if the token is expired and then refreshes it
+            if(DateTime.Now == TokenManager.ExpireTime){await TokenManager.RefreshTheToken();}
 
-            int IndexOfCommand = FullListOfCommands.IndexOf(Command);
+
             Thread.Sleep(600);
-            if(Command == "!add")  {
 
-                try
-                {
-                    string[] SearchResp = await SearchAndAdd(Song);
-
-                    CommandResponses[0] = "added " + SearchResp[0]+" by "+ SearchResp[1] + " to my queue.";
-                    HttpCall(IndexOfCommand,SearchResp[2]).Wait();
-
-
-                }
-                catch{TF2Interface.SendCommand(CommandName,"failed to add " + Song + ".");}
-
+            switch(CmdIndex)
+            {   
+                case 0: // Add song
+                    return await AddToQueue(Params, PersonWhoCalled);
+                case 1: // Skip song
+                    return await SkipOrBack(true);
+                case 2: // Go back a song
+                    return await SkipOrBack(false);
+                case 3: // Pause song
+                    return await PauseOrPlay(true);
+                case 4: // Unpause song
+                    return await PauseOrPlay(false);
+                case 5: // Toggle shuffle
+                    return await Shuffle();
+                case 6: // Get current song
+                    return $"Playing: {CurrentSong} by {CurrentArtist}. Added by {PersonWhoAddedIt}.";
+                case 7: // Get current queue
+                    return await GetQueue();
+                case 8: // Plays a random song
+                    return "random song";
+                case 9: // Gets lyrics to the song
+                    return "Not yet implemented.";
+                default:
+                    return new SpotifyManager().CommandResponses[CmdIndex];
             }
-            else if(Command=="!queue")
-            {
-                GetQueue();
-            }
-            else{HttpCall(IndexOfCommand,"").Wait();}
-        }
-        FormUrlEncodedContent formContent = new FormUrlEncodedContent(new[]{new KeyValuePair<string, string>("application/json"," ")});
-        public async Task<string[]> SearchAndAdd(string Song)
-        {
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
-            var resp = await client.GetAsync("https://api.spotify.com/v1/search?q="+Song+"&type=track%2Cepisode&market=ES&limit=1");
-            Root? model = JsonConvert.DeserializeObject<Jsons.Root>( await resp.Content.ReadAsStringAsync());
-            return new string[]{
-                model.tracks.items[0].name,
-                model.tracks.items[0].artists[0].name,
-                model.tracks.items[0].uri};                     
-        }
 
-        bool ShuffleState;
+
+        }
+        
         /// <summary>
-        /// Calls the spotify API.
+        /// The queue of songs and who added them. <br/>
+        /// The first item the arrays is the songs name <br/> 
+        /// The second is the artist name <br/> 
+        /// the third is the person who added it
+        /// the forth is the spotify ID
         /// </summary>
-        private async Task HttpCall(int IndexOfCommand,string URI)
+        static List<string[]> Queue = new List<string[]>();
+
+        /// <summary>
+        /// Adds a song to the queue.
+        /// </summary>
+        public static async Task<string> AddToQueue(string Song, string Person)
         {
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
-
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
+            var resp = await httpClient.GetAsync($"https://api.spotify.com/v1/search?q='{Song}'&type=track%2Cepisode&market=ES&limit=10");
             
-            if(IndexOfCommand == 5){
-                var Playback = await TokenManager.Spotify.Player.GetCurrentPlayback(new PlayerCurrentPlaybackRequest());
-                ShuffleState = Playback.ShuffleState;
-                string APICall = ListOfApiCalls[5] + !ShuffleState;
-                CommandResponses[5] = "Shuffle = " + !ShuffleState +".";
-                HttpResponseMessage resp1 = await client.PutAsync(APICall,null);
-                
-            }
-            else if(IndexOfCommand <= 5)
+            Jsons.Root? model = JsonConvert.DeserializeObject<Jsons.Root>( await resp.Content.ReadAsStringAsync());
+            try
             {
-                string APICall = ListOfApiCalls[IndexOfCommand] + URI;
-                HttpResponseMessage resp = await client.PostAsync(APICall,formContent);
-                HttpResponseMessage resp1 = await client.PutAsync(APICall,null);
-            }
+                httpClient.PostAsync("https://api.spotify.com/v1/me/player/queue?uri="+model.tracks.items[0].uri, formContent);
 
-            if(IndexOfCommand == 1 || IndexOfCommand == 2){await GetCurrentSong();}
-            else{TF2Interface.SendCommand(CommandName, CommandResponses[IndexOfCommand]);}
+                if(Program.LogSongsAdded)
+                {
+                    File.AppendAllText("SongLog.txt", $"{Person} Added: {model.tracks.items[0].name} by {model.tracks.items[0].artists[0].name} \n");
+                }
+                Queue.Add(new string[] {model.tracks.items[0].name, model.tracks.items[0].artists[0].name, Person, model.tracks.items[0].id});
+                return $"{Person} added: {model.tracks.items[0].name} by {model.tracks.items[0].artists[0].name} to my queue";
+            }
+            catch
+            {
+                return($"Failed to add: {Song}. sorry {Person}");
+            }
         }
 
-        static public string GetQueue()
+
+        /// <summary>
+        /// Skips or goes back a song. <br/>
+        /// <param name="Skip"> Controls if it skips or goes back as song</param>
+        /// </summary>
+        static async Task<string> SkipOrBack(bool Skip)
         {
-            GetQueue2();
+            if(Skip)
+            {
+                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/next/", formContent);
+            }
+            else
+            {
+                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/previous", formContent);
+            }
+
+            Thread.Sleep(100);
+            await GetCurrentSong();
             return "";
         }
-        static public async void GetQueue2()
-        {
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
-            var resp = await client.GetAsync("https://api.spotify.com/v1/me/player/queue?market=ES&limit=1");
-            QueueInfo = JsonConvert.DeserializeObject<Jsons.Root>( await resp.Content.ReadAsStringAsync());
-            TF2Interface.SendCommand(CommandName,"The Current Queue is:");
 
-            int AmountToSay = 5;
-            if(QueueInfo.queue.ToArray().Length < 5){AmountToSay = QueueInfo.queue.ToArray().Length;}
-            for(var i = 0; i<AmountToSay; i++)
+        /// <summary>
+        /// Pauses or plays the music. <br/>
+        /// <param name="Pause"> Controls if it pauses or plays the music</param>
+        /// </summary>
+        static async Task<string> PauseOrPlay(bool Pause)
+        {
+            if(Pause)
             {
-                Thread.Sleep(4000);
-                try{
-                    TF2Interface.SendCommand(CommandName,QueueInfo.queue[i].name + " by " +QueueInfo.queue[i].artists[0].name);
-                }
-                catch{}
+                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/pause/", formContent);
+                return "Paused.";
             }
+            else
+            {
+                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/play", formContent);
+                return "Unpaused.";
+            }
+        }
+
+
+        static bool ShuffleState;
+        static async Task<string> Shuffle()
+        {
+            await httpClient.PutAsync($"https://api.spotify.com/v1/me/player/shuffle?state={!ShuffleState}", formContent);
+            ShuffleState = !ShuffleState;
+            return $"Shuffle = {ShuffleState}";
+        }
+
+        /// <summary>
+        /// Gets the current queue and says it in chat
+        /// </summary>
+        static public async Task<string>  GetQueue()
+        {
+            var resp = await httpClient.GetAsync("https://api.spotify.com/v1/me/player/queue?market=ES&limit=1");
+            QueueInfo = JsonConvert.DeserializeObject<Jsons.Root>( await resp.Content.ReadAsStringAsync());
+            string SendBack = "The Current Queue is: \n";
+            
+            for(int i = 0; i < 5; i++)
+            {
+                for(int y = 0; y < Queue.Count; y++)
+                {
+                    if(QueueInfo.queue[i].name == Queue[y][0])
+                    {
+                        SendBack += $"{QueueInfo.queue[i].name} by {QueueInfo.queue[i].artists[0].name}. Added by: {Queue[y][2]}. \n";
+                        break;
+                    }
+                }
+                if(Queue.Count == 0)
+                {
+                    SendBack += $"{QueueInfo.queue[i].name} by {QueueInfo.queue[i].artists[0].name}. \n";
+                }
+            }
+
+            return SendBack+"And more.";
         }
 
 
@@ -173,51 +251,74 @@ namespace spot
         public async Task SongCheck()
         {
             await GetCurrentSong();
-            while(Stopwatch.ElapsedMilliseconds <= Prog){Thread.Sleep(100);}
-            await SongCheck();         
+            while(DateTime.Now < SongOverAt)
+            {
+                Thread.Sleep(100);
+            }
+            await SongCheck();
         }
 
-        static string? CurrentTrackId;
-        private async Task GetCurrentSong()
+        static DateTime SongOverAt;
+        /// <summary>
+        /// Gets the current song and says something in the tf2 chat
+        /// </summary>
+        static private async Task GetCurrentSong()
         {
-            try{await TokenManager.RefreshTheToken();}
-            catch{}
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
-            var response = await client.GetAsync("https://api.spotify.com/v1/me/player/currently-playing?market=from_token");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
+
+
+            if(DateTime.Now >= TokenManager.ExpireTime){await TokenManager.RefreshTheToken();}
+
+
+            var response = await httpClient.GetAsync("https://api.spotify.com/v1/me/player/currently-playing?market=from_token");
             var jsonString = await response.Content.ReadAsStringAsync();
             Root? model = JsonConvert.DeserializeObject<Root>(jsonString);
 
+            ShuffleState = model.shuffle_state;
+
             if(model.item.id != CurrentTrackId)
             {
-                CurrentPlaying = model.item.name;
+                CurrentSong = model.item.name;
                 CurrentTrackId = model.item.id;
                 CurrentArtist = model.item.artists[0].name;
-                TF2Interface.SendCommand(CommandName,SendSongInChat(model.item.name,model.item.artists));
+
+                try
+                {
+                    for(int i = 0; i < Queue.Count; i++)
+                    {
+                        if(Queue[i].Contains(CurrentTrackId))
+                        {
+                            PersonWhoAddedIt = Queue[0][2];
+                            Queue.RemoveAt(i);
+                        }
+                    }
+
+                }
+                catch{}
+                TF2Interface.SendCommand(ChatCommand, SendSongInChat(model.item.name, model.item.artists));
             }
-            Prog = model.item.duration_ms - model.progress_ms;
-            Stopwatch.Restart();
+
+            SongOverAt = DateTime.Now.AddMilliseconds(model.item.duration_ms - model.progress_ms);
         }
 
         /// <summary>
         /// Makes and returns a string of what will be sent in tf2 chat
         /// </summary>
-        private string SendSongInChat(string Name,List<Artist> Artists)
+        static private string SendSongInChat(string Name,List<Artist> Artists)
         {   
-            string _artists = " by ";
-                foreach(var artist in Artists)
-                {
-                    _artists += artist.name + ", ";
-                }
-            
-            if(Program.MicSpamming == false)
+
+            string _artists = "";
+            foreach(var artist in Artists)
             {
-                return "I'm now listening to: " + Name + _artists;
+                _artists += artist.name + ", ";
             }
-            else
+
+
+            if(PersonWhoAddedIt != null)
             {
-                return "now playing: " + Name + _artists;
+                return $"Now playing: {Name} by {_artists} added by {PersonWhoAddedIt}";
             }
+            return $"Now playing: {Name} by {_artists}";
         }
     }
 }

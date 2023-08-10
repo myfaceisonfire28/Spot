@@ -7,6 +7,7 @@ namespace spot
 {
     public class Jsons
     {
+
         /// <summary>
         /// Info from the spotify api currently-playing
         /// </summary>
@@ -25,6 +26,7 @@ namespace spot
 
         public class Root
         {
+            public bool shuffle_state { get; set; }
             public int progress_ms { get; set; }
             public Item? item { get; set; }
             public Tracks? tracks { get; set; }
@@ -54,4 +56,6 @@ namespace spot
         }
 
     }
+
+
 }

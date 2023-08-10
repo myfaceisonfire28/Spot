@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/grace/Documents/tf2_spotify/spot/spot.csproj": {}
+    "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj": {}
   },
   "projects": {
-    "/home/grace/Documents/tf2_spotify/spot/spot.csproj": {
+    "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/grace/Documents/tf2_spotify/spot/spot.csproj",
+        "projectUniqueName": "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj",
         "projectName": "spot",
-        "projectPath": "/home/grace/Documents/tf2_spotify/spot/spot.csproj",
+        "projectPath": "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj",
         "packagesPath": "/home/grace/.nuget/packages/",
-        "outputPath": "/home/grace/Documents/tf2_spotify/spot/obj/",
+        "outputPath": "/home/grace/Documents/tf2_spotify/Test/Spot/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/grace/.nuget/NuGet/NuGet.Config"
@@ -57,16 +57,23 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[6.0.20, 6.0.20]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/6.0.119/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/7.0.109/RuntimeIdentifierGraph.json"
         }
       }
     }

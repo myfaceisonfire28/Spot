@@ -8,19 +8,27 @@
           "Unosquare.Swan.Lite": "3.0.0"
         },
         "compile": {
-          "lib/netstandard2.0/EmbedIO.dll": {}
+          "lib/netstandard2.0/EmbedIO.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard2.0/EmbedIO.dll": {}
+          "lib/netstandard2.0/EmbedIO.dll": {
+            "related": ".xml"
+          }
         }
       },
       "Newtonsoft.Json/13.0.1": {
         "type": "package",
         "compile": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {}
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {}
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
         }
       },
       "RconSharp/2.0.1": {
@@ -41,10 +49,14 @@
           "Newtonsoft.Json": "13.0.1"
         },
         "compile": {
-          "lib/net6.0/SpotifyAPI.Web.dll": {}
+          "lib/net6.0/SpotifyAPI.Web.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net6.0/SpotifyAPI.Web.dll": {}
+          "lib/net6.0/SpotifyAPI.Web.dll": {
+            "related": ".xml"
+          }
         }
       },
       "SpotifyAPI.Web.Auth/6.3.0": {
@@ -54,28 +66,52 @@
           "SpotifyAPI.Web": "6.3.0"
         },
         "compile": {
-          "lib/net6.0/SpotifyAPI.Web.Auth.dll": {}
+          "lib/net6.0/SpotifyAPI.Web.Auth.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/net6.0/SpotifyAPI.Web.Auth.dll": {}
+          "lib/net6.0/SpotifyAPI.Web.Auth.dll": {
+            "related": ".xml"
+          }
         }
       },
       "System.IO.Pipelines/4.7.2": {
         "type": "package",
         "compile": {
-          "ref/netcoreapp2.0/System.IO.Pipelines.dll": {}
+          "ref/netcoreapp2.0/System.IO.Pipelines.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netcoreapp3.0/System.IO.Pipelines.dll": {}
+          "lib/netcoreapp3.0/System.IO.Pipelines.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "System.ValueTuple/4.5.0": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
         }
       },
       "Unosquare.Swan.Lite/3.0.0": {
         "type": "package",
+        "dependencies": {
+          "System.ValueTuple": "4.5.0"
+        },
         "compile": {
-          "lib/netstandard2.0/Swan.Lite.dll": {}
+          "lib/netstandard2.0/Swan.Lite.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard2.0/Swan.Lite.dll": {}
+          "lib/netstandard2.0/Swan.Lite.dll": {
+            "related": ".xml"
+          }
         }
       }
     }
@@ -197,6 +233,50 @@
         "version.txt"
       ]
     },
+    "System.ValueTuple/4.5.0": {
+      "sha512": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ==",
+      "type": "package",
+      "path": "system.valuetuple/4.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net461/System.ValueTuple.dll",
+        "lib/net461/System.ValueTuple.xml",
+        "lib/net47/System.ValueTuple.dll",
+        "lib/net47/System.ValueTuple.xml",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.0/System.ValueTuple.dll",
+        "lib/netstandard1.0/System.ValueTuple.xml",
+        "lib/netstandard2.0/_._",
+        "lib/portable-net40+sl4+win8+wp8/System.ValueTuple.dll",
+        "lib/portable-net40+sl4+win8+wp8/System.ValueTuple.xml",
+        "lib/uap10.0.16299/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net461/System.ValueTuple.dll",
+        "ref/net47/System.ValueTuple.dll",
+        "ref/netcoreapp2.0/_._",
+        "ref/netstandard2.0/_._",
+        "ref/portable-net40+sl4+win8+wp8/System.ValueTuple.dll",
+        "ref/uap10.0.16299/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "system.valuetuple.4.5.0.nupkg.sha512",
+        "system.valuetuple.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
     "Unosquare.Swan.Lite/3.0.0": {
       "sha512": "noPwJJl1Q9uparXy1ogtkmyAPGNfSGb0BLT1292nFH1jdMKje6o2kvvrQUvF9Xklj+IoiAI0UzF6Aqxlvo10lw==",
       "type": "package",
@@ -226,11 +306,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/grace/Documents/tf2_spotify/spot/spot.csproj",
+      "projectUniqueName": "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj",
       "projectName": "spot",
-      "projectPath": "/home/grace/Documents/tf2_spotify/spot/spot.csproj",
+      "projectPath": "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj",
       "packagesPath": "/home/grace/.nuget/packages/",
-      "outputPath": "/home/grace/Documents/tf2_spotify/spot/obj/",
+      "outputPath": "/home/grace/Documents/tf2_spotify/Test/Spot/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/grace/.nuget/NuGet/NuGet.Config"
@@ -276,16 +356,23 @@
           "net47",
           "net471",
           "net472",
-          "net48"
+          "net48",
+          "net481"
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.NETCore.App.Host.linux-x64",
+            "version": "[6.0.20, 6.0.20]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/6.0.119/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/7.0.109/RuntimeIdentifierGraph.json"
       }
     }
   }

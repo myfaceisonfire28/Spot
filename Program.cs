@@ -13,7 +13,8 @@ namespace spot
         public static string TF2Directory;
         public static string ClientID;
         public static bool ChatCommands = true;
-        public static bool MicSpamming = true;
+        public static bool LogSongsAdded = false;
+        public static bool LogCommands = false;
         public static bool TeamChat = false;
 
         static SpotifyManager Manager = new SpotifyManager();
@@ -76,27 +77,27 @@ namespace spot
 
 
 
-        ///Press any key and close
+        ///Press any key to close
         private static void PressAnyKey()
         {
-                Console.WriteLine("Press any key...");
-                Console.ReadKey();
-                Environment.Exit(0);
+            Console.WriteLine("Press any key...");
+            Console.ReadKey();
+            Environment.Exit(0);
         }
 
 
         /// Some controls for the user of the program
-        static void ConsoleControl()
+        static async void ConsoleControl()
         {
             Console.Clear();
             Console.WriteLine("Stop: closes the program (you can also just press ctrl+C).");
             Console.WriteLine("Commands: list the commands. \n");
             Console.WriteLine("Toggle: turns off/on commands.");
             Console.WriteLine("Commands enabled = " + ChatCommands+ ".\n");
-            Console.WriteLine("Spam: changes from 'im listening to to' to 'now playing'.");
-            Console.WriteLine("Mic spamming = " + MicSpamming + ".\n");
             Console.WriteLine("Team: switches two and from team chat.");
-            Console.WriteLine("Team chat = " + TeamChat+".");
+            Console.WriteLine("Team chat = " + TeamChat+".\n");
+            Console.WriteLine("Log: toggle for logging songs that get added to queue.");
+            Console.WriteLine("Log songs = " + LogSongsAdded+".");
             switch(Console.ReadLine().ToLower())
             {
                 case "stop":
@@ -121,16 +122,16 @@ namespace spot
                 case "toggle":
                     ChatCommands = !ChatCommands;
                 break;
+                case "log":
+                    LogSongsAdded = !LogSongsAdded;
+                break;
                 case "team":
                     TeamChat = !TeamChat;
-                    if(!TeamChat){SpotifyManager.CommandName = "say";}
-                    else{SpotifyManager.CommandName = "say_team";}
-                break;
-                case "spam":
-                    MicSpamming = !MicSpamming;
+                    if(!TeamChat){SpotifyManager.ChatCommand = "say";}
+                    else{SpotifyManager.ChatCommand = "say_team";}
                 break;
                 case "command":
-                    Manager.Manage(Console.ReadLine()," ");
+                    await SpotifyManager.Manage(SpotifyManager.Commands.IndexOf(Console.ReadLine()), "The DJ", Console.ReadLine());
                 break;
             }
             ConsoleControl();

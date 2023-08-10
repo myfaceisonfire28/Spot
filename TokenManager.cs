@@ -8,10 +8,10 @@ namespace spot
 {
     public class TokenManager
     {
-        public static SpotifyClient Spotify;
         static HttpListener listener = new HttpListener();
         public static string Token = " ";
         static string RefreshToken = " ";
+        public static DateTime ExpireTime; 
         public static void GetToken()
         {
             var (verifier, challenge) = PKCEUtil.GenerateCodes(120);
@@ -62,7 +62,10 @@ namespace spot
             );
             Token = initialResponse.AccessToken;
             RefreshToken = initialResponse.RefreshToken;
-            Spotify = new SpotifyClient(Token);
+
+            ExpireTime = DateTime.Now.AddSeconds(3000);
+            File.WriteAllText(Program.TF2Directory+"tf2consoleoutput.txt", "");
+            
             Program.Start();
         }
 
@@ -74,7 +77,10 @@ namespace spot
             );
             Token = newResponse.AccessToken;
             RefreshToken = newResponse.RefreshToken;
-            Spotify = new SpotifyClient(Token);
+            ExpireTime = DateTime.Now.AddSeconds(3000);
+            SpotifyManager.Init();
+
+            File.WriteAllText(Program.TF2Directory+"tf2consoleoutput.txt", "");
         }
     }
 }
