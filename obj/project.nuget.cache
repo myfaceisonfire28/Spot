@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "oDXDgMGkNmmfElQ9uTANcazAQHDTNJvhtWUjGyWB79bLeLx3c99js4b1HWU4Jht2+ag1wh0gCuUI0OcyeNOHNQ==",
+  "dgSpecHash": "9gkLNu14AKRc5rxAR2pgwRDvlrn8BKbyDtb0LBAPbsDB6FKet9f72lQRccyfhNi7Icna5wswrSRyWMzh1tgrmg==",
   "success": true,
-  "projectFilePath": "/home/grace/Documents/tf2_spotify/Test/Spot/spot.csproj",
+  "projectFilePath": "/home/grace/Documents/Silly tf2/tf2_spotify/Test/Spot/spot.csproj",
   "expectedPackageFiles": [
     "/home/grace/.nuget/packages/embedio/3.4.3/embedio.3.4.3.nupkg.sha512",
     "/home/grace/.nuget/packages/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg.sha512",
@@ -12,7 +12,7 @@
     "/home/grace/.nuget/packages/system.io.pipelines/4.7.2/system.io.pipelines.4.7.2.nupkg.sha512",
     "/home/grace/.nuget/packages/system.valuetuple/4.5.0/system.valuetuple.4.5.0.nupkg.sha512",
     "/home/grace/.nuget/packages/unosquare.swan.lite/3.0.0/unosquare.swan.lite.3.0.0.nupkg.sha512",
-    "/home/grace/.nuget/packages/microsoft.netcore.app.host.linux-x64/6.0.20/microsoft.netcore.app.host.linux-x64.6.0.20.nupkg.sha512"
+    "/home/grace/.nuget/packages/microsoft.netcore.app.host.linux-x64/6.0.23/microsoft.netcore.app.host.linux-x64.6.0.23.nupkg.sha512"
   ],
   "logs": []
 }
