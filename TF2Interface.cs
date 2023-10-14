@@ -30,11 +30,11 @@ namespace spot
                 return;
             }
 
-            if(Program.TeamChat && !LastLine.Contains(("team")))
+            if(Program.TeamChat && !LastLine.Contains(("(TEAM) ")))
             {
                 return;
             }
-
+            LastLine = LastLine.Replace("(TEAM) ", "");
 
 
             int i = 0;
@@ -44,8 +44,8 @@ namespace spot
                 {
                     var PersonWhoCalled = LastLine.Substring(0, LastLine.IndexOf(":")).Replace("*DEAD*","");
                     LastLine = LastLine.Substring(LastLine.IndexOf(":")+1);
-                    
-                    var Params = LastLine.Substring(LastLine.IndexOf(IsXThere) + IsXThere.Length);
+                    LastLine += " ";
+                    var Params = LastLine.Substring(LastLine.IndexOf(IsXThere) + IsXThere.Length+1);
                     SendCommand("say", await SpotifyManager.Manage(i, PersonWhoCalled, Params));
                     return;
                 }
@@ -59,7 +59,7 @@ namespace spot
         /// <summary>
         /// Sends commands to tf2 using RCON
         /// </summary>
-        static public async void SendCommand(string Command,string Params)
+        static public async void SendCommand(string Command, string Params)
         {
             if(!Auth)
             {
@@ -85,7 +85,4 @@ namespace spot
 
         }
     }
-
-
-
 }

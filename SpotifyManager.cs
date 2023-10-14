@@ -1,13 +1,6 @@
-using System.Net;
-using System;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
-using SpotifyAPI.Web;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Threading;
 using static spot.Jsons;
 
 namespace spot
@@ -34,8 +27,8 @@ namespace spot
             "!back","!pause",
             "!play","!shuffle",
             "!current","!queue",
-            "!random", "!lyrics",
-            "!rtd","!8ball",
+            "!random", "!rtd", 
+            "!rps", "!8ball", 
             "!robot","!flip"
         }; 
         ///Responses to commands
@@ -45,7 +38,7 @@ namespace spot
             "Unpaused music.","Shuffle",
             "Currently playing: "+CurrentSong + " by " + CurrentArtist,"Say Queue in chat",
             "Not made","Not made", 
-            "Rolled "+ Rand.Next(),EightBall[Rand.Next(EightBall.Length)], 
+            "Rolled "+ Rand.Next(),EightBall[Rand.Next(EightBall.Length)], "",
             "Beep boop bop", Flip()
         };
 
@@ -80,7 +73,57 @@ namespace spot
                 return "Heads.";
             }
         }
-        
+
+        public static string RPS(string Params)
+        {
+            switch(Rand.Next(1, 3))
+            {
+                case 1:
+                    if(Params.ToLower().Contains("rock"))
+                    {
+                        return "Tie";
+                    }
+                    else if(Params.ToLower().Contains("scissors"))
+                    {
+                        return "Win";
+                    }
+                    else if(Params.ToLower().Contains("paper"))
+                    {
+                        return "Loss";
+                    }
+                return "Thats not a rock, paper, or scissors.";
+                case 2:
+                    if(Params.ToLower().Contains("scissors"))
+                    {
+                        return "Tie";
+                    }
+                    else if(Params.ToLower().Contains("paper"))
+                    {
+                        return "Win";
+                    }
+                    else if(Params.ToLower().Contains("rock"))
+                    {
+                        return "Loss";
+                    }
+                return "Thats not a rock, paper, or scissors.";
+                case 3:
+                    if(Params.ToLower().Contains("paper"))
+                    {
+                        return "Tie";
+                    }
+                    else if(Params.ToLower().Contains("rock"))
+                    {
+                        return "Win";
+                    }
+                    else if(Params.ToLower().Contains("scissors"))
+                    {
+                        return "Loss";
+                    }
+                return "Thats not a rock, paper, or scissors.";
+                default:
+                return "my code fucked up";
+            }
+        }
 
         public static void Init()
         {
@@ -90,14 +133,13 @@ namespace spot
         }
 
 
-
-
+        static int SkipCounter = 0;
+        static List<string> PeopleVoted = new List<string>();
         ///Manges the commands that get sent
         public static async Task<string> Manage(int CmdIndex, string PersonWhoCalled, string Params)
         {
             // Checks if the token is expired and then refreshes it
             if(DateTime.Now == TokenManager.ExpireTime){await TokenManager.RefreshTheToken();}
-
 
             Thread.Sleep(600);
 
@@ -106,7 +148,22 @@ namespace spot
                 case 0: // Add song
                     return await AddToQueue(Params, PersonWhoCalled);
                 case 1: // Skip song
-                    return await SkipOrBack(true);
+                    if(SkipCounter >= 2 && !PeopleVoted.Contains(PersonWhoCalled))
+                    {
+                        SkipCounter = 0;
+                        PeopleVoted.Clear();
+                        return await SkipOrBack(true);
+                    }
+                    else if (!PeopleVoted.Contains(PersonWhoCalled))
+                    {
+                        SkipCounter++;
+                        PeopleVoted.Add(PersonWhoCalled);
+                        return SkipCounter+"/3 votes required to skip a song.";
+                    }
+                    else
+                    {
+                        return "Cant vote twice.";
+                    }
                 case 2: // Go back a song
                     return await SkipOrBack(false);
                 case 3: // Pause song
@@ -120,16 +177,35 @@ namespace spot
                 case 7: // Get current queue
                     return await GetQueue();
                 case 8: // Plays a random song
-                    return "random song";
-                case 9: // Gets lyrics to the song
-                    return "Not yet implemented.";
+                    return await RandomSong();
+                case 9: // rtd
+                    return $"Rolled: {Rand.Next()}";
+                case 10: // rps
+                    return RPS(Params);
+                case 11: // 8ball
+                    return EightBall[Rand.Next(EightBall.Length)];
                 default:
                     return new SpotifyManager().CommandResponses[CmdIndex];
             }
-
-
         }
-        
+
+
+        static string characters = "abcdefghijklmnopqrstuvwxyz";        
+        static async Task<string> RandomSong()
+        {
+            string RandomChar = characters[Rand.Next(25)].ToString();
+              switch (Rand.Next(0, 1)) {
+                case 0:
+                RandomChar = RandomChar + '%';
+                break;
+                case 1:
+                RandomChar = '%' + RandomChar + '%';
+                break;
+            }
+            return await AddToQueue(RandomChar, "Mr random", Rand.Next(1000));
+        }
+
+
         /// <summary>
         /// The queue of songs and who added them. <br/>
         /// The first item the arrays is the songs name <br/> 
@@ -137,17 +213,21 @@ namespace spot
         /// the third is the person who added it
         /// the forth is the spotify ID
         /// </summary>
-        static List<string[]> Queue = new List<string[]>();
+        public static List<string[]> Queue = new List<string[]>();
 
         /// <summary>
         /// Adds a song to the queue.
         /// </summary>
-        public static async Task<string> AddToQueue(string Song, string Person)
+        public static async Task<string> AddToQueue(string Song, string Person, int Offset = 0)
         {
+            if(!Program.CanAdd) {return "Currently disabled.";}
+
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenManager.Token);
-            var resp = await httpClient.GetAsync($"https://api.spotify.com/v1/search?q='{Song}'&type=track%2Cepisode&market=ES&limit=10");
+            var resp = await httpClient.GetAsync($"https://api.spotify.com/v1/search?q={Song}&type=track%2Cepisode&market=ES&offset={Offset}");
             
             Jsons.Root? model = JsonConvert.DeserializeObject<Jsons.Root>( await resp.Content.ReadAsStringAsync());
+
+
             try
             {
                 httpClient.PostAsync("https://api.spotify.com/v1/me/player/queue?uri="+model.tracks.items[0].uri, formContent);
@@ -161,7 +241,7 @@ namespace spot
             }
             catch
             {
-                return($"Failed to add: {Song}. sorry {Person}");
+                return $"Failed to add: {Song}. sorry {Person}";
             }
         }
 
@@ -170,7 +250,7 @@ namespace spot
         /// Skips or goes back a song. <br/>
         /// <param name="Skip"> Controls if it skips or goes back as song</param>
         /// </summary>
-        static async Task<string> SkipOrBack(bool Skip)
+        public static async Task<string> SkipOrBack(bool Skip)
         {
             if(Skip)
             {
@@ -194,12 +274,12 @@ namespace spot
         {
             if(Pause)
             {
-                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/pause/", formContent);
+                await httpClient.PutAsync("https://api.spotify.com/v1/me/player/pause/", formContent);
                 return "Paused.";
             }
             else
             {
-                await httpClient.PostAsync("https://api.spotify.com/v1/me/player/play", formContent);
+                await httpClient.PutAsync("https://api.spotify.com/v1/me/player/play", formContent);
                 return "Unpaused.";
             }
         }
@@ -286,16 +366,20 @@ namespace spot
                 {
                     for(int i = 0; i < Queue.Count; i++)
                     {
-                        if(Queue[i].Contains(CurrentTrackId))
+                        if(Queue[i][3] == CurrentTrackId)
                         {
-                            PersonWhoAddedIt = Queue[0][2];
+                            PersonWhoAddedIt = Queue[i][2];
                             Queue.RemoveAt(i);
+                            break;
                         }
                     }
 
                 }
                 catch{}
+                SkipCounter = 0;
+                PeopleVoted.Clear();
                 TF2Interface.SendCommand(ChatCommand, SendSongInChat(model.item.name, model.item.artists));
+                PersonWhoAddedIt = null;
             }
 
             SongOverAt = DateTime.Now.AddMilliseconds(model.item.duration_ms - model.progress_ms);
@@ -306,7 +390,6 @@ namespace spot
         /// </summary>
         static private string SendSongInChat(string Name,List<Artist> Artists)
         {   
-
             string _artists = "";
             foreach(var artist in Artists)
             {
